@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drag & Drop File Upload</title>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+    />
+    <!-- Google Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="header">
+      <img src="./assests/takeoff-the-plane-svgrepo-com.svg" alt="Logo" class="header-logo">
+      <h1>Bring your files. We'll take it from here.</h1>
+    </div>
+
+    <div class="container">
+      <input type="file" id="upload-button" multiple accept="image/*" />
+      <label for="upload-button">
+        <img src="./assests/man-with-ascending-arrow-svgrepo-com.svg" alt="">
+        Choose Or Drop Files
+      </label>
+      <div id="error"></div>
+      <div id="image-display"></div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
