@@ -3,6 +3,7 @@ import uuid
 
 from services.citation_extractor import extract_references_from_text
 from services.claim_extractor import extract_claims_from_text
+from services.claim_verifier import verify_claims_against_citations
 from services.pdf_extractor import extract_pdf_text
 from services.research_retriever import enrich_citation_via_openalex
 
@@ -35,7 +36,8 @@ async def upload_publication(file: UploadFile = File(...)):
         document_id = str(uuid.uuid4())
         raw_citations = extract_references_from_text(document_id, result["full_text"])
         enriched_citations = [enrich_citation_via_openalex(c) for c in raw_citations]
-        claims = extract_claims_from_text(document_id, result["full_text"])
+        extracted_claims = extract_claims_from_text(document_id, result["full_text"])
+        verified_claims = verify_claims_against_citations(extracted_claims, enriched_claims := enriched_citations)
 
         return {
             "filename": file.filename,
@@ -45,8 +47,8 @@ async def upload_publication(file: UploadFile = File(...)):
             "pages": result["pages"],
             "citations_count": len(enriched_citations),
             "citations": enriched_citations,
-            "claims_count": len(claims),
-            "claims": claims,
+            "claims_count": len(verified_claims),
+            "claims": verified_claims,
         }
 
     except HTTPException:
