@@ -1,4 +1,9 @@
-const BACKEND_BASE = "http://127.0.0.1:8000";
+const BACKEND_BASE = "https://site-verify.onrender.com";
+
+const esc = (s) =>
+  String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
 
 document.addEventListener("DOMContentLoaded", () => {
   const quoteBtn = document.getElementById("get-quote");
@@ -37,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  /* ---------- UPLOAD PAGE ---------- */
   const uploadButton = document.getElementById("upload-button");
   const uploadBox = document.querySelector(".container");
   const errorEl = document.getElementById("error");
@@ -53,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       errorEl.innerText = "";
-      previewEl.innerHTML = `<p class="rs-status-msg">Uploading <strong>${file.name}</strong> and checking claims and references…</p>`;
+      previewEl.innerHTML = `<p class="rs-status-msg">Uploading <strong>${esc(file.name)}</strong> and checking claims and references…</p>`;
 
       try {
         const formData = new FormData();
@@ -108,6 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /* ---------- RESULTS PAGE ---------- */
   const resultsPage = document.getElementById("results-page");
   if (resultsPage) {
     const STATUS = {
@@ -128,16 +135,17 @@ document.addEventListener("DOMContentLoaded", () => {
       unverified: "No linked reference or external record could be matched to verify this statement automatically.",
     };
 
-    const esc = (s) =>
-      String(s ?? "").replace(/[&<>"']/g, (c) =>
-        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
-      );
-
     const cleanText = (s) =>
       String(s ?? "")
         .replace(/([A-Za-z]{2,})-\s+([a-z]{2,})/g, "$1$2")
         .replace(/\s+/g, " ")
         .trim();
+
+    const prettyKey = (key) =>
+      key
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (m) => m.toUpperCase())
+        .replace(/\bDoi\b/g, "DOI");
 
     const loadingEl = document.getElementById("rs-loading");
     const resultsErrorEl = document.getElementById("rs-error");
@@ -264,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="rs-detail-title">Why it has this label</div>
               <p class="rs-detail-body">${esc(reasonText)}</p>
             </div>
-            <div class="rs-detail-block">
+            <div class="rs-detail-block" tabindex="0">
               <div class="rs-detail-title">Original citation</div>
               <div class="rs-detail-body">${citationHtml}</div>
             </div>
@@ -279,16 +287,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (integrityObj && typeof integrityObj === "object") {
         Object.entries(integrityObj).forEach(([key, val]) => {
           if (val === null || val === undefined || typeof val === "object") return;
-          const niceKey = key.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+          const niceKey = prettyKey(key);
           const niceVal = typeof val === "boolean" ? (val ? "Yes" : "No") : cleanText(String(val));
-          entries.push(`<div class="rs-info-pill"><span>${esc(niceKey)}</span><strong>${esc(niceVal)}</strong></div>`);
+          const isNote = /note/i.test(key);
+          entries.push(`<div class="rs-info-pill${isNote ? " rs-note" : ""}"><span>${esc(niceKey)}</span><strong>${esc(niceVal)}</strong></div>`);
         });
       }
       if (scoresObj && typeof scoresObj === "object") {
         Object.entries(scoresObj).forEach(([key, val]) => {
           if (val === null || val === undefined || typeof val === "object") return;
-          const niceKey = key.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
-          entries.push(`<div class="rs-info-pill"><span>${esc(niceKey)}</span><strong>${esc(String(val))}</strong></div>`);
+          entries.push(`<div class="rs-info-pill"><span>${esc(prettyKey(key))}</span><strong>${esc(String(val))}</strong></div>`);
         });
       }
       integrityEl.innerHTML = entries.length
@@ -373,7 +381,8 @@ document.addEventListener("DOMContentLoaded", () => {
           .map((k) => `<button class="rs-filter" data-filter="${k}">${STATUS[k]} (${counts[k] || 0})</button>`)
           .join("");
 
-      filtersEl.addEventListener("click", (e) => {
+      // onclick (not addEventListener) so re-rendering never stacks duplicate handlers
+      filtersEl.onclick = (e) => {
         const btn = e.target.closest(".rs-filter");
         if (!btn) return;
         filtersEl.querySelectorAll(".rs-filter").forEach((b) => b.classList.remove("active"));
@@ -381,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
         claimsEl.querySelectorAll(".rs-claim-card").forEach((el) => {
           el.hidden = btn.dataset.filter !== "all" && el.dataset.status !== btn.dataset.filter;
         });
-      });
+      };
 
       claimsEl.innerHTML = r.claims.length
         ? r.claims.map((c, idx) => renderClaim(c, idx, r.citations)).join("")
@@ -459,11 +468,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const items = Array.isArray(body.grounded_items) ? body.grounded_items : [];
             const itemsHtml = items.length
               ? `<div class="rs-grounded-list"><div class="rs-detail-title">Related items from this document</div>${items
-                    .map((it) => {
-                      const st = STATUS[it.verification_status] || it.verification_status || "Note";
-                      return `<div class="rs-grounded-item"><span class="rs-chip st-${esc(it.verification_status || "unverified")}">${esc(st)}</span><span>${esc(cleanText(it.claim_text || ""))}</span></div>`;
-                    })
-                    .join("")}</div>`
+                  .map((it) => {
+                    const st = STATUS[it.verification_status] || it.verification_status || "Note";
+                    return `<div class="rs-grounded-item"><span class="rs-chip st-${esc(it.verification_status || "unverified")}">${esc(st)}</span><span>${esc(cleanText(it.claim_text || ""))}</span></div>`;
+                  })
+                  .join("")}</div>`
               : "";
             ansEl.innerHTML = `<p class="rs-assistant-text">${esc(answerText)}</p>${itemsHtml}`;
           }
@@ -473,4 +482,4 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
-});
+});S
