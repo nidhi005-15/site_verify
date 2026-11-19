@@ -1,3 +1,17 @@
+from services.rag_store import retrieve_relevant_chunks
+
+
+def _attach_evidence(claim_obj: dict, citations: list[dict]) -> dict:
+    if not isinstance(claim_obj, dict):
+        return claim_obj
+    claim_text = str(claim_obj.get("claim") or claim_obj.get("text") or claim_obj.get("sentence") or "")
+    chunks = retrieve_relevant_chunks(claim_text, citations or [], top_k=3)
+    enriched = dict(claim_obj)
+    enriched["evidence_snippets"] = chunks
+    enriched["retrieval_score"] = chunks[0]["score"] if chunks else 0.0
+    return enriched
+
+
 import re
 
 
@@ -58,4 +72,4 @@ def verify_claims_against_citations(claims: list[dict], citations: list[dict]) -
             "verification_reason": reason,
         })
 
-    return verified_claims
+    return [_attach_evidence(item, citations if isinstance(citations, list) else []) for item in verified_claims]
