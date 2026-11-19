@@ -54,3 +54,12 @@ def test_llm_verify_claim_returns_none_when_unconfigured():
 
     assert llm_verify_claim("Some claim", [{"snippet": "Some snippet"}], "none", "", None) is None
     assert llm_verify_claim("Some claim", [], "openai", "gpt-4o-mini", "test-key") is None
+
+
+def test_attach_evidence_handles_no_match():
+    from services.claim_verifier import _attach_evidence
+
+    claim = {"claim": "Quantum tunneling in superconductors."}
+    result = _attach_evidence(claim, [])
+    assert result["evidence_snippets"] == []
+    assert result["retrieval_score"] == 0.0
