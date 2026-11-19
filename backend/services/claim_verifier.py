@@ -1,10 +1,11 @@
-from services.rag_store import retrieve_relevant_chunks
+import config
+from services.rag_store import llm_verify_claim, retrieve_relevant_chunks
 
 
 def _attach_evidence(claim_obj: dict, citations: list[dict]) -> dict:
     if not isinstance(claim_obj, dict):
         return claim_obj
-    claim_text = str(claim_obj.get("claim") or claim_obj.get("text") or claim_obj.get("sentence") or "")
+    claim_text = str(claim_obj.get("claim_text") or claim_obj.get("claim") or claim_obj.get("text") or claim_obj.get("sentence") or "")
     chunks = retrieve_relevant_chunks(claim_text, citations or [], top_k=3)
     enriched = dict(claim_obj)
     enriched["evidence_snippets"] = chunks
@@ -41,7 +42,7 @@ def verify_claims_against_citations(claims: list[dict], citations: list[dict]) -
         for citation in citations:
             ref_parts = [
                 str(citation.get("title") or ""),
-                str(citation.get("raw_text") or ""),
+                str(citation.get("raw_text") or citation.get("raw_reference") or ""),
                 str(citation.get("venue") or ""),
             ]
             ref_tokens = _tokenize(" ".join(ref_parts))
@@ -64,12 +65,31 @@ def verify_claims_against_citations(claims: list[dict], citations: list[dict]) -
             confidence = 0.2
             reason = "No sufficient term overlap found with extracted citations."
 
-        verified_claims.append({
+        item = {
             **claim,
             "verification_status": status,
             "confidence": confidence,
             "matched_citation_title": best_citation.get("title") if isinstance(best_citation, dict) else None,
             "verification_reason": reason,
-        })
+        }
+        ev_chunks = retrieve_relevant_chunks((claim.get("claim_text") or claim.get("claim") or "") if isinstance(claim, dict) else str(claim), citations if isinstance(citations, list) else [])
+        llm_res = llm_verify_claim(
+            (claim.get("claim_text") or claim.get("claim") or "") if isinstance(claim, dict) else str(claim),
+            ev_chunks,
+            getattr(config.get_settings() if hasattr(config, "get_settings") else config, "llm_provider", getattr(config, "LLM_PROVIDER", "none")),
+            getattr(config.get_settings() if hasattr(config, "get_settings") else config, "llm_model", getattr(config, "LLM_MODEL", "gpt-4o-mini")),
+            getattr(config.get_settings() if hasattr(config, "get_settings") else config, "llm_api_key", getattr(config, "LLM_API_KEY", None)),
+        )
+        if isinstance(llm_res, dict):
+            llm_status = llm_res.get("status")
+            if isinstance(llm_status, str) and llm_status.strip():
+                item["verification_status"] = llm_status.strip().lower()
+            llm_conf = llm_res.get("confidence")
+            if isinstance(llm_conf, (int, float)):
+                item["confidence"] = round(max(0.0, min(1.0, float(llm_conf))), 2)
+            llm_reason = llm_res.get("reason")
+            if isinstance(llm_reason, str) and llm_reason.strip():
+                item["verification_reason"] = llm_reason.strip()
+        verified_claims.append(item)
 
     return [_attach_evidence(item, citations if isinstance(citations, list) else []) for item in verified_claims]

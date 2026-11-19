@@ -29,3 +29,36 @@ def test_upload_extracts_citations_claims_and_verification():
     first_claim = data["claims"][0]
     assert "verification_status" in first_claim
     assert "confidence" in first_claim
+
+
+def test_upload_rejects_empty_file():
+    resp = client.post("/upload", files={"file": ("empty.pdf", b"", "application/pdf")})
+    assert resp.status_code == 400
+
+
+def test_upload_rejects_blank_pdf():
+    doc = fitz.open()
+    doc.new_page()
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    resp = client.post("/upload", files={"file": ("blank.pdf", pdf_bytes, "application/pdf")})
+    assert resp.status_code == 422
+
+
+def test_claim_verifier_statuses():
+    from services.claim_verifier import verify_claims_against_citations
+
+    claims = [
+        {"claim_id": "c1", "claim_text": "Our experiments show thermal accuracy improves inside living cells."},
+        {"claim_id": "c2", "claim_text": "Our experiments show quantum coherence persists in cells."},
+        {"claim_id": "c3", "claim_text": "Our experiments show unrelated optical scattering behavior."},
+    ]
+    citations = [
+        {"title": "Thermal accuracy in living cells", "raw_reference": "Nanometre thermometry in living cells"},
+    ]
+    results = verify_claims_against_citations(claims, citations)
+    assert len(results) == 3
+    assert results[0]["verification_status"] == "supported"
+    assert results[1]["verification_status"] == "partially_supported"
+    assert results[2]["verification_status"] == "unverified"
