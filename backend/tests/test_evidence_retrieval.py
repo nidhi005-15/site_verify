@@ -63,3 +63,51 @@ def test_attach_evidence_handles_no_match():
     result = _attach_evidence(claim, [])
     assert result["evidence_snippets"] == []
     assert result["retrieval_score"] == 0.0
+
+
+def test_llm_verify_claim_parses_json_response(monkeypatch):
+    import io
+    import json
+    import urllib.request
+    from services.rag_store import llm_verify_claim
+
+    class DummyResp:
+        def __init__(self, payload: dict):
+            self._raw = json.dumps(payload).encode("utf-8")
+
+        def read(self) -> bytes:
+            return self._raw
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    api_payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": json.dumps({
+                        "status": "supported",
+                        "confidence": 0.91,
+                        "reason": "Evidence directly confirms the claim.",
+                    })
+                }
+            }
+        ]
+    }
+    monkeypatch.setattr(urllib.request, "urlopen", lambda req, timeout=8.0: DummyResp(api_payload))
+
+    out = llm_verify_claim(
+        "Neural networks improve accuracy",
+        [{"snippet": "Study shows neural networks improve accuracy."}],
+        "openai",
+        "gpt-4o-mini",
+        "test-key",
+    )
+    assert out == {
+        "status": "supported",
+        "confidence": 0.91,
+        "reason": "Evidence directly confirms the claim.",
+    }
