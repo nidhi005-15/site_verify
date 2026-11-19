@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verification Report | CiteVerify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="rs-topbar">
+      <a href="index.html" class="rs-brand">
+        <img src="./assests/thumb-up-svgrepo-com.svg" alt="" height="28" /> CiteVerify
+      </a>
+      <a href="upload.html" class="rs-link">New upload</a>
+    </header>
+
+    <main class="rs-page" id="results-page">
+      <p id="rs-loading">Loading report…</p>
+      <p id="rs-error" class="rs-error" hidden></p>
+
+      <section id="rs-content" hidden>
+        <h1 id="rs-title"></h1>
+        <p id="rs-meta" class="rs-muted"></p>
+
+        <div class="rs-scores">
+          <div class="rs-score-card">
+            <span class="rs-muted">Claim verification</span>
+            <strong id="rs-score-claims"></strong>
+            <div class="rs-bar"><div id="rs-bar-claims"></div></div>
+          </div>
+          <div class="rs-score-card">
+            <span class="rs-muted">Originality</span>
+            <strong id="rs-score-orig"></strong>
+            <div class="rs-bar"><div id="rs-bar-orig"></div></div>
+          </div>
+        </div>
+
+        <div class="rs-summary" id="rs-summary"></div>
+        <div class="rs-filters" id="rs-filters"></div>
+        <div id="rs-claims"></div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,6 +1,18 @@
 # CiteVerify
 
+## Project description
+
+CiteVerify is an AI-powered, multilingual research integrity platform that verifies academic papers instead of just summarizing them. It extracts claims and citations from uploaded PDFs, retrieves the cited sources, and checks each claim against the evidence using RAG and LLMs, classifying it as Supported, Partially Supported, Unsupported, Contradictory, or Potentially Outdated.
+
+It also assesses originality separately from claim accuracy, and includes a grounded AI research assistant and exportable reports. The backend is built with Python and FastAPI, with a separate frontend.
+
 Scientific Claim and Citation Verification System built with FastAPI. CiteVerify parses uploaded PDF publications, extracts reference citations and cue-matched claims, enriches citation metadata via OpenAlex, retrieves relevant evidence snippets, and evaluates claim support.
+
+## Team members
+
+- P Amrutha Varshini
+- Nidhi V Aathreya
+- Charanya NV
 
 ## Project Structure
 
@@ -14,11 +26,11 @@ Scientific Claim and Citation Verification System built with FastAPI. CiteVerify
 - `backend/services/rag_store.py` — Ranks citation snippets by lexical overlap (`retrieve_relevant_chunks`) and provides optional LLM verification (`llm_verify_claim`).
 - `backend/services/claim_verifier.py` — Scores overlap between claims and citations (`supported`, `partially_supported`, `unverified`) and optionally applies LLM verification results.
 - `backend/tests/` — Automated `pytest` test suite covering the upload pipeline, evidence retrieval, and claim verification.
-- `frontend/` — Frontend workspace directory.
+- `frontend/` — Landing page (`index.html`), upload page (`upload.html`) and results page (`results.html`), sharing `style.css` and `script.js`.
 
 ## Setup & Running Locally
 
-### 1. Backend Dependencies & Test Suite
+### Backend
 
 ```bash
 cd backend
@@ -26,5 +38,5 @@ python -m venv .venv
 # Activate .venv (Windows Git Bash: source .venv/Scripts/activate | Linux/macOS: source .venv/bin/activate)
 pip install -r requirements.txt pytest
 python -m pytest -v
-cd backend
 uvicorn main:app --reload
+```
