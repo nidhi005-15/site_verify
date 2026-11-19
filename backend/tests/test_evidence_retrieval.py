@@ -47,3 +47,10 @@ def test_attach_evidence_adds_snippets_and_score():
     assert result["claim"] == claim["claim"]
     assert result["retrieval_score"] > 0
     assert len(result["evidence_snippets"]) == 1
+
+
+def test_llm_verify_claim_returns_none_when_unconfigured():
+    from services.rag_store import llm_verify_claim
+
+    assert llm_verify_claim("Some claim", [{"snippet": "Some snippet"}], "none", "", None) is None
+    assert llm_verify_claim("Some claim", [], "openai", "gpt-4o-mini", "test-key") is None
