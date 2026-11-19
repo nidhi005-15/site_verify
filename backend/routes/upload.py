@@ -1,5 +1,9 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
+import uuid
+
+from services.citation_extractor import extract_references_from_text
 from services.pdf_extractor import extract_pdf_text
+from services.research_retriever import enrich_citation_via_openalex
 
 router = APIRouter()
 
@@ -21,12 +25,15 @@ async def upload_publication(file: UploadFile = File(...)):
 
     try:
         result = extract_pdf_text(pdf_bytes)
-
         if not result["full_text"].strip():
             raise HTTPException(
                 status_code=422,
                 detail="No readable text found. OCR support is needed.",
             )
+
+        document_id = str(uuid.uuid4())
+        raw_citations = extract_references_from_text(document_id, result["full_text"])
+        enriched_citations = [enrich_citation_via_openalex(c) for c in raw_citations]
 
         return {
             "filename": file.filename,
@@ -34,6 +41,8 @@ async def upload_publication(file: UploadFile = File(...)):
             "total_pages": result["total_pages"],
             "extracted_text": result["full_text"],
             "pages": result["pages"],
+            "citations_count": len(enriched_citations),
+            "citations": enriched_citations,
         }
 
     except HTTPException:
