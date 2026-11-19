@@ -42,7 +42,7 @@ async def upload_publication(file: UploadFile = File(...)):
         )
 
     try:
-        result = extract_pdf_text(pdf_bytes)
+        result = extract_pdf_text(pdf_bytes, filename=file.filename or "uploaded.pdf")
         if not result["full_text"].strip():
             raise HTTPException(
                 status_code=422,
@@ -127,6 +127,8 @@ async def upload_publication(file: UploadFile = File(...)):
 
     except HTTPException:
         raise
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error))
     except Exception as error:
         raise HTTPException(
             status_code=500,
