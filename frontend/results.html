@@ -3,42 +3,80 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verification Report | CiteVerify</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Document Check Report — CiteVerify</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header class="rs-topbar">
       <a href="index.html" class="rs-brand">
-        <img src="./assests/thumb-up-svgrepo-com.svg" alt="" height="28" /> CiteVerify
+        <img src="./assests/thumb-up-svgrepo-com.svg" alt="" height="28" />
+        <span>CiteVerify</span>
       </a>
-      <a href="upload.html" class="rs-link">New upload</a>
+      <a href="upload.html" class="rs-link">Check Another PDF</a>
     </header>
 
     <main class="rs-page" id="results-page">
-      <p id="rs-loading">Loading report…</p>
+      <p id="rs-loading" class="rs-status-msg">Checking your document and preparing a plain-English report…</p>
       <p id="rs-error" class="rs-error" hidden></p>
 
       <section id="rs-content" hidden>
-        <h1 id="rs-title"></h1>
-        <p id="rs-meta" class="rs-muted"></p>
+        <div class="rs-doc-header">
+          <h1 id="rs-title"></h1>
+          <p id="rs-meta" class="rs-muted"></p>
+          <p id="rs-plain-overview" class="rs-overview"></p>
+        </div>
 
         <div class="rs-scores">
           <div class="rs-score-card">
-            <span class="rs-muted">Claim verification</span>
+            <span class="rs-card-label">How well claims are backed up</span>
             <strong id="rs-score-claims"></strong>
             <div class="rs-bar"><div id="rs-bar-claims"></div></div>
           </div>
           <div class="rs-score-card">
-            <span class="rs-muted">Originality</span>
+            <span class="rs-card-label">Originality & integrity</span>
             <strong id="rs-score-orig"></strong>
             <div class="rs-bar"><div id="rs-bar-orig"></div></div>
           </div>
         </div>
 
-        <div class="rs-summary" id="rs-summary"></div>
-        <div class="rs-filters" id="rs-filters"></div>
-        <div id="rs-claims"></div>
+        <section class="rs-section-box">
+          <h2>Document Integrity Summary</h2>
+          <div id="rs-integrity" class="rs-integrity-grid"></div>
+        </section>
+
+        <section class="rs-section-box">
+          <h2>Claims Breakdown</h2>
+          <p class="rs-muted">Each statement below shows its status label, why it received that label, and the original citation or reference linked to it.</p>
+          <div class="rs-summary" id="rs-summary"></div>
+          <div class="rs-filters" id="rs-filters"></div>
+          <div id="rs-claims" class="rs-claims-list"></div>
+        </section>
+
+        <section class="rs-section-box">
+          <h2>References Found in Paper</h2>
+          <p class="rs-muted">List of references extracted from the document and matched against academic records where available.</p>
+          <div id="rs-citations" class="rs-citations-list"></div>
+        </section>
+
+        <section id="rs-assistant" class="rs-section-box rs-assistant-box">
+          <h2>Ask About This Document</h2>
+          <p class="rs-muted">
+            The Research Assistant answers questions using the claims, verification results, and references extracted from this PDF.
+          </p>
+          <form id="rs-assistant-form" class="rs-assistant-form">
+            <input
+              type="text"
+              id="rs-assistant-input"
+              placeholder="Example: Which claims are unsupported or need attention?"
+              required
+            />
+            <button type="submit" id="rs-assistant-btn">Ask</button>
+          </form>
+          <div id="rs-assistant-answer" class="rs-assistant-answer">
+            Ask a question above to see a summary grounded in this document.
+          </div>
+        </section>
       </section>
     </main>
 
