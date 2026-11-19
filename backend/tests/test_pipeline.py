@@ -62,3 +62,45 @@ def test_claim_verifier_statuses():
     assert results[0]["verification_status"] == "supported"
     assert results[1]["verification_status"] == "partially_supported"
     assert results[2]["verification_status"] == "unverified"
+
+
+def test_upload_enrichment_assistant_and_report_endpoints():
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text(
+        (72, 72),
+        "Our model reduces infection rates by 40% in adults.\n"
+        "However, the method does not apply to all groups.\n"
+        "References\n[1] Smith et al. (2010) Infection study in adults.",
+    )
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    upload_resp = client.post("/upload", files={"file": ("study.pdf", pdf_bytes, "application/pdf")})
+    assert upload_resp.status_code == 200
+    payload = upload_resp.json()
+
+    assert "document_id" in payload
+    assert payload["language"] == "en"
+    assert "claim_verification_score" in payload["scores"]
+    assert "originality_score" in payload["integrity"]
+    assert "integrity_indicators" in payload["integrity"]
+
+    if payload["claims"]:
+        assert "discrepancies" in payload["claims"][0]
+        assert "multilingual" in payload["claims"][0]
+
+    doc_id = payload["document_id"]
+    report_resp = client.get(f"/report/{doc_id}")
+    assert report_resp.status_code == 200
+    assert report_resp.json()["document_id"] == doc_id
+
+    missing_report = client.get("/report/nonexistent-id-check")
+    assert missing_report.status_code == 404
+
+    assistant_resp = client.post(
+        "/assistant",
+        json={"question": "What are the scores and any discrepancies?", "document_id": doc_id},
+    )
+    assert assistant_resp.status_code == 200
+    assert "answer" in assistant_resp.json()
