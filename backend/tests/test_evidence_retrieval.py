@@ -26,3 +26,24 @@ def test_retrieve_relevant_chunks_ranks_matching_citation():
     assert len(results) == 1
     assert results[0]["citation_id"] == "c1"
     assert results[0]["score"] > 0
+
+
+def test_attach_evidence_adds_snippets_and_score():
+    from services.claim_verifier import _attach_evidence
+
+    claim = {"claim": "Neural network accuracy improves on vision tasks."}
+    citations = [
+        {
+            "citation_id": "c1",
+            "title": "Vision Neural Network Accuracy",
+            "abstract": "Evaluates neural network accuracy across vision benchmarks.",
+            "doi": "10.1000/vis1",
+            "year": 2025,
+            "is_retracted": False,
+            "open_access_url": None,
+        }
+    ]
+    result = _attach_evidence(claim, citations)
+    assert result["claim"] == claim["claim"]
+    assert result["retrieval_score"] > 0
+    assert len(result["evidence_snippets"]) == 1
