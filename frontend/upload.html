@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload PDF — CiteVerify</title>
+    <title>Upload File — CiteVerify</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
@@ -17,14 +17,18 @@
   <body>
     <div class="header">
       <img src="./assests/takeoff-the-plane-svgrepo-com.svg" alt="Logo" class="header-logo" />
-      <h1>Bring your PDF file. We'll verify it from here.</h1>
+      <h1>Bring your PDF, JSON, or CSV file. We'll verify it from here.</h1>
     </div>
 
     <div class="container">
-      <input type="file" id="upload-button" accept=".pdf,application/pdf" />
+      <input
+        type="file"
+        id="upload-button"
+        accept=".pdf,.json,.csv,application/pdf,application/json,text/csv"
+      />
       <label for="upload-button">
         <img src="./assests/man-with-ascending-arrow-svgrepo-com.svg" alt="" />
-        Choose Or Drop PDF File
+        Choose Or Drop PDF, JSON, or CSV File
       </label>
       <div id="error"></div>
       <div id="image-display"></div>
