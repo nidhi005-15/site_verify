@@ -49,12 +49,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewEl = document.getElementById("image-display");
 
   if (uploadButton && uploadBox && errorEl && previewEl) {
-    const uploadPdf = async (file) => {
+    const uploadFile = async (file) => {
       if (!file) return;
-      const isPdf =
-        file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-      if (!isPdf) {
-        errorEl.innerText = "Please choose a PDF file (.pdf) so we can check its claims and references.";
+      const lowerName = file.name.toLowerCase();
+      const allowedExt =
+        lowerName.endsWith(".pdf") ||
+        lowerName.endsWith(".json") ||
+        lowerName.endsWith(".csv");
+      const allowedMime = [
+        "application/pdf",
+        "application/json",
+        "text/json",
+        "text/csv",
+        "application/csv",
+        "text/plain",
+      ].includes(file.type);
+
+      if (!allowedExt && !allowedMime) {
+        errorEl.innerText =
+          "Please choose a PDF (.pdf), JSON (.json), or CSV (.csv) file so we can check its claims and references.";
         return;
       }
 
@@ -85,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     uploadButton.addEventListener("change", () => {
       if (uploadButton.files && uploadButton.files[0]) {
-        uploadPdf(uploadButton.files[0]);
+        uploadFile(uploadButton.files[0]);
       }
     });
 
@@ -109,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       uploadBox.classList.remove("active");
       const files = e.dataTransfer.files;
       if (files && files[0]) {
-        uploadPdf(files[0]);
+        uploadFile(files[0]);
       }
     });
   }
@@ -381,7 +394,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .map((k) => `<button class="rs-filter" data-filter="${k}">${STATUS[k]} (${counts[k] || 0})</button>`)
           .join("");
 
-      // onclick (not addEventListener) so re-rendering never stacks duplicate handlers
       filtersEl.onclick = (e) => {
         const btn = e.target.closest(".rs-filter");
         if (!btn) return;
@@ -436,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (!cached) {
       loadingEl.hidden = true;
       resultsErrorEl.hidden = false;
-      resultsErrorEl.textContent = "No document found. Please upload a PDF first.";
+      resultsErrorEl.textContent = "No document found. Please upload a PDF, JSON, or CSV file first.";
     }
 
     const assistantForm = document.getElementById("rs-assistant-form");
@@ -482,4 +494,4 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
-});S
+});
